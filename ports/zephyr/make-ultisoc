@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# This is a wrapper for make to build a UltiSoC Zephyr port.
+#
+#
+
+make \
+    CONF_FILE=prj_ultisoc.conf \
+    CFLAGS_EXTRA='-DMP_CONFIGFILE="<mpconfigport_ultisoc.h>"' \
+    FROZEN_DIR= \
+    QEMU_NET=0 \
+    BOARD=ultisoc_fpga \
+    SRC_MOD="ultisoc_memcpy.c modultisoc.c" \
+    "$@"
