@@ -1,0 +1,134 @@
+MICROPYTHON FOR ULTISOC
+=======================
+
+MicroPython port for UltiSoC is based on Zephyr Project RTOS. Before going to
+next steps clone a repository with UltiSoC port of Zephyr RTOS located at:
+
+    https://github.com/skarpenko/zephyr.git
+
+and follow instructions in README.ultiparc file to install required environment.
+
+Make sure all Zephyr prerequisites and sources are installed correctly by
+building one of sample programs.
+
+
+
+Building MicroPython
+--------------------
+
+Once Zephyr RTOS environment is properly configured use the following steps
+to build MicroPython binary:
+
+1. Go to Zephyr port directory:
+
+    cd ports/zephyr
+
+2. Build MicroPython using the following shell script:
+
+    ./make-ultisoc
+
+If build was successful the directory ports/zephyr/outdir/ultisoc_fpga/zephyr
+should contain the following binaries:
+
+    zephyr.elf
+    zephyr.bin
+
+if there is no zephyr.bin file it can be obtained using the following command:
+
+    mipsisa32-elf-objcopy -O binary zephyr.elf zephyr.bin
+
+
+
+Loading binary to FPGA board
+----------------------------
+
+UltiSoC uses serial port for input and output so the binary can be loaded
+into the board using XModem protocol which is supported by UltiSoC boot ROM.
+This requires terminal program with XModem support, for example, CuteCom or
+Moserial.
+
+Here is an example screen of boot ROM help listing all supported user commands:
+
+--------------------------------------------------------------------------------
+         __    __
+/  \||_.(_  _ /
+\__/||_|__)(_)\____
+|__) _  _ |_|__)/  \|\/|
+|__)(_)(_)|_| \ \__/|  |
+(Build: Jun  9 2019 16:58:50)
+
+CPU Id   : 001A8100
+SoC ver. : 20190316
+Sys.freq.: 50000000Hz
+ROM      : [0x00000000-0x00007FFF]
+RAM      : [0x01000000-0x0103FFFF]
+
+Type 'h' for help.
+
+Echo is on
+$ h
+help                            - this help screen (aliases: 'h')
+echo [on|off]                   - console echo control
+lfcr [on|off]                   - line ending mode
+socinf                          - print SoC details
+mfc0 <reg_name|num>             - read value from CP0 register
+mtc0 <value> <reg_name|num>     - write value to CP0 register
+disasm <addr> <num> [per_page]  - disassemble instructions (aliases: 'dis', 'd')
+regnames                        - print CPU register names
+exc <0-7>                       - trigger exception
+jmp <addr>                      - jump to address
+run                             - run loaded ELF binary
+led [mask]                      - set/get LEDs status
+memdump <addr> <len> [per_page] - dump memory contents (alias: 'md')
+memmove <dst> <src> <len>       - move block of memory
+memset <addr> <value> <len>     - fill block of memory
+rdb <addr>                      - read byte
+rdh <addr>                      - read halfword
+rdw <addr>                      - read word
+reset                           - soft reset
+wrb <addr> <value>              - write byte
+wrh <addr> <value>              - write halfword
+wrw <addr> <value>              - write word
+xelf                            - load ELF binary over XModem protocol
+xmodem <addr>                   - load data over XModem protocol
+$
+--------------------------------------------------------------------------------
+
+Boot ROM supports two different ways of loading binaries into RAM of the SoC:
+
+1. ELF binaries can be loaded directly using 'xelf' command:
+
+    xelf      <- Start XModem for receiving of ELF binary (for ex., zephyr.elf).
+    run       <- Transfer control to loaded executable binary.
+
+2. Any data can be loaded to any location of system RAM (for ex., zephyr.bin).
+
+    xmodem 0x1000000  <- Start XModem for receiving and saving data to RAM base.
+    jmp 0x1000000     <- Jump to RAM base address to run loaded binary.
+
+
+
+UltiSoC specific package
+------------------------
+
+This version of MicroPython provides UltiSoC specific package which can be
+imported into a program with the following statement:
+
+    import ultisoc
+
+The package contains the following functions:
+
+* ultisoc.reset()     - jumps back to boot ROM (soft reset).
+
+* ultisoc.leds(arg)   - returns current state of LEDs on the board or sets new
+                        state using a mask from an optional argument.
+
+* ultisoc.cpuid()     - returns value of CPU Id.
+
+* ultisoc.socid()     - returns SoC version.
+
+* ultisoc.sys_freq()  - returns system frequency in Herz.
+
+* ultisoc.cpu_tsc()   - returns 64-bit value of CPU timestamp counter.
+
+* ultisoc.cpu_tsc32() - returns value of lower 32 bits of CPU timestamp counter.
