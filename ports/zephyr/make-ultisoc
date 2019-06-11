@@ -10,5 +10,5 @@ make \
     FROZEN_DIR= \
     QEMU_NET=0 \
     BOARD=ultisoc_fpga \
-    SRC_MOD="ultisoc_memcpy.c modultisoc.c" \
+    SRC_MOD="ultisoc_mem.c modultisoc.c" \
     "$@"

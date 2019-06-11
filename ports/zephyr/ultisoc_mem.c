@@ -24,13 +24,16 @@
 
 #include <stddef.h>
 
+
 /*
  * Ultiparc core doesn't support load/store instructions for unaligned memory
- * access (lwr, lwl, swl, swr). However these instructions are used at memcpy()
- * function provided with MIPS-I toolchain. The function below overrides this
- * implementation with simpler version which doesn't use unsupported
+ * access (lwr, lwl, swl, swr). However these instructions are used in memory
+ * functions provided with MIPS-I toolchain. Functions below override standard
+ * implementations with simpler versions which do not use unsupported
  * instructions.
- */ 
+ */
+
+
 void *memcpy(void *dst, const void *src, size_t n) {
     char *d = dst;
     const char *s = src;
@@ -40,4 +43,14 @@ void *memcpy(void *dst, const void *src, size_t n) {
         d[i] = s[i];
 
     return dst;
+}
+
+
+void *memset(void *s, int c, size_t n) {
+    char *xs = (char *)s;
+
+    for( ; n > 0; --n)
+        *xs++ = (char)c;
+
+    return s;
 }
